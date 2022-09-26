@@ -7,7 +7,7 @@
   "mcversion": "${mcversion}",
   "url": "",
   "updateUrl": "",
-  "authorList": ["jojo"],
+  "authorList": ["jojo", "tomcat"],
   "credits": "",
   "logoFile": "",
   "screenshots": [],
