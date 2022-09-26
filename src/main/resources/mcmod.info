@@ -1,0 +1,16 @@
+[
+{
+  "modid": "playerlist",
+  "name": "PlayerList",
+  "description": "Lists players in Pit wearing notable pants.",
+  "version": "${version}",
+  "mcversion": "${mcversion}",
+  "url": "",
+  "updateUrl": "",
+  "authorList": ["jojo"],
+  "credits": "",
+  "logoFile": "",
+  "screenshots": [],
+  "dependencies": []
+}
+]
