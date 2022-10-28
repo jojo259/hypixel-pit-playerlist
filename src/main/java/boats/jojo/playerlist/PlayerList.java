@@ -22,7 +22,7 @@ import net.minecraftforge.fml.common.gameevent.TickEvent;
 public class PlayerList
 {
     public static final String MODID = "playerlist";
-    public static final String VERSION = "1.0";
+    public static final String VERSION = "1.1";
 
     Minecraft mc = Minecraft.getMinecraft();
 
@@ -62,6 +62,7 @@ public class PlayerList
     public void init(FMLInitializationEvent event)
     {
         MinecraftForge.EVENT_BUS.register(this);
+
     }
 
     @SubscribeEvent
@@ -92,7 +93,7 @@ public class PlayerList
                 mc.fontRendererObj.drawStringWithShadow(element, xOffSet, yOffSet, 0xFFFFFFFF);
                 xOffSet += mc.fontRendererObj.getStringWidth(element + " ");
             };
-            stringEdgeOffset += mc.fontRendererObj.FONT_HEIGHT + 1;
+            yOffSet += mc.fontRendererObj.FONT_HEIGHT + 1;
 
             GlStateManager.popMatrix();
         }
@@ -101,27 +102,15 @@ public class PlayerList
     public void checkPlayers() {
         playersList.clear();
 
-        // for testing
-
-        /*
-		playersList.add(new String[] {"�f�l" + "JojoQ", "�5" + "�l" + "Venom" + " " + "II", "�f�l259m"});
-		playersList.add(new String[] {"�f�l" + "qiaodou", "�c" + "�l" + "Regularity" + " " + "I", "�4�l7m"});
-		playersList.add(new String[] {"�f�l" + "xTomCat", "�c" + "�l" + "Regularity" + " " + "III", "�e�l41m"});
-
-		longestNotableUsernameWidth = mc.fontRendererObj.getStringWidth("�f�lxTomCat");
-		longestEnchantWidth = mc.fontRendererObj.getStringWidth("�c�lRegularity III");
-
-		if (true) { // return during testing to avoid using actual data
-			return;
-		}
-         */
-
         List<EntityPlayer> allPlayers = mc.theWorld.playerEntities;
 
         for (EntityPlayer curPlayer : allPlayers) {
             List<String> details = getPlayerDetails(curPlayer);
-            if(details.size() > 1);
-                playersList.add((String[]) details.toArray());
+            if(details.size() > 1) {
+                String[] detailsArray = new String[details.size()];
+                detailsArray = details.toArray(detailsArray);
+                playersList.add(detailsArray);
+            }
         }
     }
 
@@ -131,7 +120,7 @@ public class PlayerList
             return ret;
         ret.add(pl.getDisplayNameString());
         if(permList.contains(pl))
-            ret.add("�cPERMED");
+            ret.add("§cPERMED");
 
         ItemStack pants = pl.getCurrentArmor(1); // 1 = pants
 
@@ -178,25 +167,25 @@ public class PlayerList
 
                     String pantsColorCode = "";
                     if (curPlayerPantsNonce == 6)
-                        pantsColorCode = "�5";
+                        pantsColorCode = "§5";
                     else if (curPlayerPantsNonce == 9)
-                        pantsColorCode = "�c";
+                        pantsColorCode = "§c";
 
-                    ret.add( pantsColorCode + "�l" + curNotableEnchant[1] + " " + curEnchantLevel);
+                    ret.add( pantsColorCode + "§l" + curNotableEnchant[1] + " " + curEnchantLevel);
 
                     int playerDist = (int) Math.round(mc.thePlayer.getDistanceSqToEntity(pl));
 
                     String playerDistColorCode = "";
                     if (playerDist < 8)
-                        playerDistColorCode = "�4";
+                        playerDistColorCode = "§4";
                     else if (playerDist < 16)
-                        playerDistColorCode = "�c";
+                        playerDistColorCode = "§c";
                     else if (playerDist < 32)
-                        playerDistColorCode = "�6";
+                        playerDistColorCode = "§6";
                     else if (playerDist < 64)
-                        playerDistColorCode = "�e";
+                        playerDistColorCode = "§e";
                     else
-                        playerDistColorCode = "�f";
+                        playerDistColorCode = "§f";
 
                     ret.add(playerDistColorCode);
                 }
