@@ -9,6 +9,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
+import net.minecraftforge.client.ClientCommandHandler;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent.ElementType;
 import net.minecraftforge.common.MinecraftForge;
@@ -59,10 +60,10 @@ public class PlayerList
     };
 
     @EventHandler
-    public void init(FMLInitializationEvent event)
-    {
+    public void init(FMLInitializationEvent event) {
         MinecraftForge.EVENT_BUS.register(this);
-
+        ClientCommandHandler.instance.registerCommand(new PermCommand());
+        Config.loadConfig();
     }
 
     @SubscribeEvent
@@ -119,7 +120,7 @@ public class PlayerList
         if (pl == mc.thePlayer)
             return ret;
         ret.add(pl.getDisplayNameString());
-        if(permList.contains(pl))
+        if(PermCommand.permList.contains(pl.getName().toLowerCase()))
             ret.add("§cPERMED");
 
         ItemStack pants = pl.getCurrentArmor(1); // 1 = pants
