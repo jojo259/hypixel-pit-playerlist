@@ -6,6 +6,8 @@ import java.util.List;
 import net.minecraft.client.Minecraft;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.ICommandSender;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.util.BlockPos;
 import net.minecraft.util.ChatComponentText;
 
 public class PermCommand extends CommandBase {
@@ -39,6 +41,14 @@ public class PermCommand extends CommandBase {
 		}
 		Config.updateConfig();
 	}
+	@Override
+	public List<String> addTabCompletionOptions(ICommandSender sender, String[] args, BlockPos pos) {
+        return args.length == 1 ? getListOfStringsMatchingLastWord(args, new String[] {"list", "remove", "add"}) : null; //(args.length == 2 ? getListOfStringsMatchingLastWord(args, getListOfPlayerUsernames()): null);
+    }
+	
+    private String[] getListOfPlayerUsernames() {
+        return MinecraftServer.getServer().getAllUsernames();
+    }
 
 	@Override
 	public String getCommandUsage(ICommandSender sender) {

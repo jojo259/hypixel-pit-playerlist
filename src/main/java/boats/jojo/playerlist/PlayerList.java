@@ -3,6 +3,8 @@ package boats.jojo.playerlist;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.lwjgl.opengl.GL11;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.entity.player.EntityPlayer;
@@ -27,19 +29,19 @@ public class PlayerList
 
 	Minecraft mc = Minecraft.getMinecraft();
 
-	ArrayList<String[]> playersList = new ArrayList<String[]>();
-	ArrayList<EntityPlayer> permList = new ArrayList<EntityPlayer>();
+	ArrayList<Player> playersList = new ArrayList<Player>();
+	//ArrayList<EntityPlayer> permList = new ArrayList<EntityPlayer>();
 
 	int secondsPerCheckPlayers = 1;
+	int permWidth = 0;
+	double lastCheckedPlayers = 0;
 
 	float textScale = 2/4f;
 
 	int stringEdgeOffset = 4;
 	int stringSpacingX = 16;
-	int stringSpacingY = 9;
 
-	double lastCheckedPlayers = 0;
-	int longestNotableUsernameWidth = 0;
+	int longestUsernameWidth = 0;
 	int longestEnchantWidth = 0;
 
 	// all dark enchants (besides somber) + regularity
@@ -86,19 +88,25 @@ public class PlayerList
         }
 
 		int yOffSet = stringEdgeOffset;
-		for (String[] cur : playersList) {
-			GlStateManager.pushMatrix();
-			GlStateManager.scale((float) textScale, (float) textScale, 1); // don't know what last parameter is for
+		GlStateManager.pushMatrix();
+		GlStateManager.scale((float) textScale, (float) textScale, 1); // don't know what last parameter is for
+		for (Player cur : playersList) {
+			GlStateManager.resetColor();
 
-			int xOffSet = stringEdgeOffset;
-			for (String element : cur) {
-				mc.fontRendererObj.drawStringWithShadow(element, xOffSet, yOffSet, 0xFFFFFFFF);
-				xOffSet += mc.fontRendererObj.getStringWidth(element + " ");
-			};
+			mc.fontRendererObj.drawStringWithShadow(cur.getName(), stringEdgeOffset, yOffSet, 0xFFFFFFFF);
+			int enchOffSet = 0;
+			for(String ench : cur.getEnchants()) {
+				mc.fontRendererObj.drawStringWithShadow(ench, stringEdgeOffset + longestUsernameWidth + stringSpacingX + enchOffSet, yOffSet, 0xFFFFFFFF);
+				enchOffSet += mc.fontRendererObj.getStringWidth(ench);
+			}
+			mc.fontRendererObj.drawStringWithShadow(cur.isPermed() ?  "§c§lPERMED": "", stringEdgeOffset + longestUsernameWidth + longestEnchantWidth + stringSpacingX * 2, yOffSet, yOffSet);
+			mc.fontRendererObj.drawStringWithShadow(cur.getDistance()  , stringEdgeOffset + longestUsernameWidth + longestEnchantWidth + permWidth + stringSpacingX * 3, yOffSet, yOffSet);
+			
+			
 			yOffSet += mc.fontRendererObj.FONT_HEIGHT + 1;
 
-			GlStateManager.popMatrix();
 		}
+		GlStateManager.popMatrix();
 	}
 
 	private void checkPlayers() {
@@ -107,26 +115,29 @@ public class PlayerList
 		List<EntityPlayer> allPlayers = mc.theWorld.playerEntities;
 
 		for (EntityPlayer curPlayer : allPlayers) {
-			List<String> details = getPlayerDetails(curPlayer);
-			if (details.size() > 1) {
-				String[] detailsArray = new String[details.size()];
-				detailsArray = details.toArray(detailsArray);
-				playersList.add(detailsArray);
+			Player cpd = getPlayerDetails(curPlayer); 
+			if(cpd.isNoticable()) {
+				playersList.add(cpd);
+				cpd.doCalc();
+				longestEnchantWidth = cpd.longestEnchantLength > longestEnchantWidth ? cpd.longestEnchantLength : longestEnchantWidth;
+				longestUsernameWidth = cpd.longestStringLength > longestUsernameWidth ? cpd.longestStringLength : longestUsernameWidth;
 			}
 		}
+		
+		permWidth = mc.fontRendererObj.getStringWidth("§c§lPERMED"); //safety
 	}
 
-	private List<String> getPlayerDetails(EntityPlayer pl) {
-		List<String> ret = new ArrayList<String>();
+	private Player getPlayerDetails(EntityPlayer pl) {
+		Player ret = new Player();
 
 		if (pl == mc.thePlayer) {
 			return ret;
         }
 
-		ret.add(pl.getDisplayNameString());
+		ret.setName(pl.getName());
         
 		if(PermCommand.permList.contains(pl.getName().toLowerCase())) {
-			ret.add("§c§lPERMED");
+			ret.setPermed(true);
         }
 
 		ItemStack pants = pl.getCurrentArmor(1); // 1 = pants
@@ -189,9 +200,9 @@ public class PlayerList
 						pantsColorCode = "§c";
                     }
 
-					ret.add( pantsColorCode + "§l" + curNotableEnchant[1] + " " + curEnchantLevel);
+					ret.addEnchant( pantsColorCode + "§l" + curNotableEnchant[1] + " " + curEnchantLevel);
 
-					int playerDist = (int) Math.round(mc.thePlayer.getDistanceSqToEntity(pl));
+					int playerDist = (int) Math.round(mc.thePlayer.getDistanceToEntity(pl));
 
 					String playerDistColorCode = "";
 					if (playerDist < 8) {
@@ -210,7 +221,7 @@ public class PlayerList
 						playerDistColorCode = "§f";
                     }
 
-					ret.add(playerDistColorCode);
+					ret.setDistance(playerDistColorCode + playerDist);
 				}
             }
 		}
