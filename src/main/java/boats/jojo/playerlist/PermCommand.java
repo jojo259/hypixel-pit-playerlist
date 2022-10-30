@@ -25,13 +25,20 @@ public class PermCommand extends CommandBase {
 		if(args[0].equals("add")) {
 			for(int i = 1; i < args.length; i++) {
 				permList.add(args[i].toLowerCase());
-				mc.thePlayer.addChatMessage(new ChatComponentText("§cPermed " + args[i]));
+				mc.thePlayer.addChatMessage(new ChatComponentText("§4Permed " + args[i] + "."));
 			}
 		}
 		else if(args[0].equals("remove")) {
 			for(int i = 1; i < args.length; i++) {
-				permList.remove(args[i].toLowerCase());
-				mc.thePlayer.addChatMessage(new ChatComponentText("§4Unpermed " + args[i]));
+				int curUsernameIndex = permList.indexOf(args[i]);
+
+				if (curUsernameIndex == -1) {
+					mc.thePlayer.addChatMessage(new ChatComponentText("§6Player " + args[i] + " is not on perm list."));
+					continue;
+				}
+				
+				permList.remove(curUsernameIndex);
+				mc.thePlayer.addChatMessage(new ChatComponentText("§4Unpermed " + args[i] + "."));
 			}
 		}
 		else if(args[0].equals("list")) {
@@ -52,7 +59,7 @@ public class PermCommand extends CommandBase {
 
 	@Override
 	public String getCommandUsage(ICommandSender sender) {
-		return "/perm <add/remove/list> <username> ";
+		return "/perm <add/remove/list> <username>";
 	}
 
 	@Override

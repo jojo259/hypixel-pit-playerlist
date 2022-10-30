@@ -95,13 +95,12 @@ public class PlayerList
 
 			mc.fontRendererObj.drawStringWithShadow(cur.getName(), stringEdgeOffset, yOffSet, 0xFFFFFFFF);
 			int enchOffSet = 0;
-			for(String ench : cur.getEnchants()) {
+			for (String ench : cur.getEnchants()) {
 				mc.fontRendererObj.drawStringWithShadow(ench, stringEdgeOffset + longestUsernameWidth + stringSpacingX + enchOffSet, yOffSet, 0xFFFFFFFF);
 				enchOffSet += mc.fontRendererObj.getStringWidth(ench);
 			}
 			mc.fontRendererObj.drawStringWithShadow(cur.isPermed() ?  "§c§lPERMED": "", stringEdgeOffset + longestUsernameWidth + longestEnchantWidth + stringSpacingX * 2, yOffSet, yOffSet);
-			mc.fontRendererObj.drawStringWithShadow(cur.getDistance()  , stringEdgeOffset + longestUsernameWidth + longestEnchantWidth + permWidth + stringSpacingX * 3, yOffSet, yOffSet);
-			
+			mc.fontRendererObj.drawStringWithShadow(cur.getDistance(), stringEdgeOffset + longestUsernameWidth + longestEnchantWidth + permWidth + stringSpacingX * 3, yOffSet, yOffSet);
 			
 			yOffSet += mc.fontRendererObj.FONT_HEIGHT + 1;
 
@@ -116,7 +115,7 @@ public class PlayerList
 
 		for (EntityPlayer curPlayer : allPlayers) {
 			Player cpd = getPlayerDetails(curPlayer); 
-			if(cpd.isNoticable()) {
+			if (cpd.isNoticable()) {
 				playersList.add(cpd);
 				cpd.doCalc();
 				longestEnchantWidth = cpd.longestEnchantLength > longestEnchantWidth ? cpd.longestEnchantLength : longestEnchantWidth;
