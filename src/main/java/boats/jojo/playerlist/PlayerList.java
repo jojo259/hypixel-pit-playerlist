@@ -9,7 +9,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
-import net.minecraft.util.BlockPos;
+import net.minecraftforge.client.ClientCommandHandler;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent.ElementType;
 import net.minecraftforge.common.MinecraftForge;
@@ -23,24 +23,26 @@ import net.minecraftforge.fml.common.gameevent.TickEvent;
 public class PlayerList
 {
 	public static final String MODID = "playerlist";
-	public static final String VERSION = "1.0";
-	
-	Minecraft mcInstance = Minecraft.getMinecraft();
-	
-	ArrayList<String[]> playersList = new ArrayList<String[]>();
-	
+	public static final String VERSION = "1.1";
+
+	Minecraft mc = Minecraft.getMinecraft();
+
+	ArrayList<Player> playersList = new ArrayList<Player>();
+	//ArrayList<EntityPlayer> permList = new ArrayList<EntityPlayer>();
+
 	int secondsPerCheckPlayers = 1;
-	
+	double lastCheckedPlayers = 0;
+
+	int distanceWidth = 8;
+
 	float textScale = 2/4f;
-	
+
 	int stringEdgeOffset = 4;
 	int stringSpacingX = 16;
-	int stringSpacingY = 9;
-	
-	double lastCheckedPlayers = 0;
-	int longestNotableUsernameWidth = 0;
+
+	int longestUsernameWidth = 0;
 	int longestEnchantWidth = 0;
-	
+
 	// all dark enchants (besides somber) + regularity
 	String notableEnchants[][] = {
 		{"regularity", "Regularity"},
@@ -57,130 +59,150 @@ public class PlayerList
 		{"nostalgia", "Nostalgia"},
 		{"golden_handcuffs", "Golden Handcuffs"},
 	};
-	
+
 	@EventHandler
-	public void init(FMLInitializationEvent event)
-	{
+	public void init(FMLInitializationEvent event) {
 		MinecraftForge.EVENT_BUS.register(this);
+		ClientCommandHandler.instance.registerCommand(new PermCommand());
+		Config.loadConfig();
 	}
-	
+
 	@SubscribeEvent
 	public void tickEvent(TickEvent.PlayerTickEvent event) {
 		if (!isInPit()) {
 			return;
 		}
-		
+
 		double curTime = System.currentTimeMillis();
 		if (curTime - lastCheckedPlayers > 1000 * secondsPerCheckPlayers) {
 			checkPlayers();
 			lastCheckedPlayers = curTime;
 		}
 	}
-	
+
 	@SubscribeEvent
 	public void overlayEvent(RenderGameOverlayEvent.Post event) {
 		if (!event.type.equals(ElementType.TEXT)) {
 			return;
 		}
-		
-		for (int i = 0; i < playersList.size(); i++) {
-			String curEntry[] = playersList.get(i);
+
+		distanceWidth = 12;
+
+		int yOffSet = stringEdgeOffset;
+		GlStateManager.pushMatrix();
+		GlStateManager.scale((float) textScale, (float) textScale, 1); // don't know what last parameter is for
+		for (Player cur : playersList) {
+			GlStateManager.resetColor();
+
+			mc.fontRendererObj.drawStringWithShadow(cur.getName(), stringEdgeOffset, yOffSet, 0xFFFFFFFF);
+
+			mc.fontRendererObj.drawStringWithShadow(cur.getEnchant(), stringEdgeOffset + longestUsernameWidth + stringSpacingX, yOffSet, 0xFFFFFFFF);
+
+			mc.fontRendererObj.drawStringWithShadow(cur.getDistance(),                  stringEdgeOffset + longestUsernameWidth + longestEnchantWidth + stringSpacingX * 2,                        yOffSet, yOffSet);
+			mc.fontRendererObj.drawStringWithShadow(cur.isPermed() ?  "Â§cÂ§lPERMED": "", stringEdgeOffset + longestUsernameWidth + longestEnchantWidth + stringSpacingX * 2 + distanceWidth + stringSpacingX * 1, yOffSet, yOffSet);
 			
-			String curPlayerName = curEntry[0];
-			String curPlayerEnch = curEntry[1];
-			String curPlayerDist = curEntry[2];
-			
-			GlStateManager.pushMatrix();
-			
-			GlStateManager.scale((float) textScale, (float) textScale, 1); // don't know what last parameter is for
-			
-			mcInstance.fontRendererObj.drawStringWithShadow(curPlayerName, stringEdgeOffset, stringEdgeOffset + i * stringSpacingY, 0xffffff);
-			mcInstance.fontRendererObj.drawStringWithShadow(curPlayerEnch, stringEdgeOffset + longestNotableUsernameWidth + stringSpacingX, stringEdgeOffset + i * stringSpacingY, 0xffffff);
-			mcInstance.fontRendererObj.drawStringWithShadow(curPlayerDist, stringEdgeOffset + longestNotableUsernameWidth + stringSpacingX + longestEnchantWidth + stringSpacingX, stringEdgeOffset + i * stringSpacingY, 0xffffff);
-			
-			GlStateManager.popMatrix();
+			yOffSet += mc.fontRendererObj.FONT_HEIGHT + 1;
+		}
+		GlStateManager.popMatrix();
+	}
+
+	private void checkPlayers() {
+		longestUsernameWidth = 0;
+		longestEnchantWidth = 0;
+		playersList.clear();
+
+		List<EntityPlayer> allPlayers = mc.theWorld.playerEntities;
+
+		for (EntityPlayer curPlayer : allPlayers) {
+			Player cpd = getPlayerDetails(curPlayer); 
+			if (cpd.isNoticable()) {
+				playersList.add(cpd);
+				cpd.doCalc();
+				longestEnchantWidth = cpd.enchantLength > longestEnchantWidth ? cpd.enchantLength : longestEnchantWidth;
+				longestUsernameWidth = cpd.longestStringLength > longestUsernameWidth ? cpd.longestStringLength : longestUsernameWidth;
+			}
 		}
 	}
-	
-	public void checkPlayers() {
-		playersList.clear();
-		
-		// for testing
-		
-		/*
-		playersList.add(new String[] {"§f§l" + "JojoQ", "§5" + "§l" + "Venom" + " " + "II", "§f§l259m"});
-		playersList.add(new String[] {"§f§l" + "qiaodou", "§c" + "§l" + "Regularity" + " " + "I", "§4§l7m"});
-		playersList.add(new String[] {"§f§l" + "xTomCat", "§c" + "§l" + "Regularity" + " " + "III", "§e§l41m"});
-		
-		longestNotableUsernameWidth = mcInstance.fontRendererObj.getStringWidth("§f§lxTomCat");
-		longestEnchantWidth = mcInstance.fontRendererObj.getStringWidth("§c§lRegularity III");
-		
-		if (true) { // return during testing to avoid using actual data
-			return;
-		}
-		*/
-		
-		BlockPos clientPos = mcInstance.thePlayer.getPosition();
-		int clientPosX = clientPos.getX();
-		int clientPosY = clientPos.getY();
-		int clientPosZ = clientPos.getZ();
 
-		List<EntityPlayer> allPlayers = mcInstance.theWorld.playerEntities;
+	private Player getPlayerDetails(EntityPlayer pl) {
+		Player ret = new Player();
+
+		if (pl == mc.thePlayer) {
+			return ret;
+		}
+
+		ret.setName(pl.getName());
 		
-		for (EntityPlayer curPlayer : allPlayers) {
-			String curPlayerName = curPlayer.getName();
-			if (curPlayerName.equals(mcInstance.thePlayer.getName())) {
-				continue;
-			}
-			
-			ItemStack curPlayerPants = curPlayer.getCurrentArmor(1); // 1 = pants
-			
-			if (curPlayerPants == null) {
-				continue;
-			}
-			
-			NBTTagCompound curPlayerPantsNbt = curPlayerPants.getTagCompound();
-			
-			if (!curPlayerPantsNbt.hasKey("ExtraAttributes")) {
-				continue;
-			}
-			
-			NBTTagCompound curPlayerPantsExtraAttributes = (NBTTagCompound) curPlayerPantsNbt.getTag("ExtraAttributes");
-			
-			if (!curPlayerPantsExtraAttributes.hasKey("CustomEnchants")) {
-				continue;
-			}
-			
-			if (!curPlayerPantsExtraAttributes.hasKey("Nonce")) {
-				continue;
-			}
-			
-			int curPlayerPantsNonce = curPlayerPantsExtraAttributes.getInteger("Nonce");
-			
-			if (curPlayerPantsNonce != 6 && curPlayerPantsNonce != 9) { // darks nonce and rages nonce
-				continue;
-			}
-			
-			NBTTagList curItemNbtCustomEnchants = curPlayerPantsExtraAttributes.getTagList("CustomEnchants", 10); // don't know what the 10 does but i had it in some previous code, it says "type"?
-			
+		if(PermCommand.permList.contains(pl.getName().toLowerCase())) {
+			ret.setPermed(true);
+		}
+
+		// check player distance
+
+		int playerDist = (int) Math.round(mc.thePlayer.getDistanceToEntity(pl));
+
+		String playerDistColorCode = "";
+		if (playerDist < 8) {
+			playerDistColorCode = "Â§4";
+		}
+		else if (playerDist < 16) {
+			playerDistColorCode = "Â§c";
+		}
+		else if (playerDist < 32) {
+			playerDistColorCode = "Â§6";
+		}
+		else if (playerDist < 64) {
+			playerDistColorCode = "Â§e";
+		}
+		else {
+			playerDistColorCode = "Â§f";
+		}
+
+		ret.setDistance(playerDistColorCode + playerDist);
+
+		ItemStack pants = pl.getCurrentArmor(1); // 1 = pants
+
+		if (pants == null) {
+			return ret; // player has no pants on
+		}
+
+		NBTTagCompound curPlayerPantsNbt = pants.getTagCompound();
+
+		if (!curPlayerPantsNbt.hasKey("ExtraAttributes")) {
+			return ret; // pants dont have extra attributes
+		}
+
+		NBTTagCompound curPlayerPantsExtraAttributes = (NBTTagCompound) curPlayerPantsNbt.getTag("ExtraAttributes");
+
+		if (!curPlayerPantsExtraAttributes.hasKey("CustomEnchants") || !curPlayerPantsExtraAttributes.hasKey("Nonce")) {
+			return ret; // pants dont have enchants or a nonce
+		}
+
+		int curPlayerPantsNonce = curPlayerPantsExtraAttributes.getInteger("Nonce");
+
+		if (curPlayerPantsNonce == 6 || curPlayerPantsNonce == 9) {
+
+			// player has darks/rages on so check enchants
+
+			NBTTagList curItemNbtCustomEnchants = curPlayerPantsExtraAttributes.getTagList("CustomEnchants", 10);
+
 			for (int p = 0; p < curItemNbtCustomEnchants.tagCount(); p++) {
-				
+
 				NBTTagCompound curEnchant = (NBTTagCompound) curItemNbtCustomEnchants.get(p);
-				
+
 				String curEnchantKey = "enchant";
-				if (curEnchant.hasKey("Key")) { // just for sanity...
+				if (curEnchant.hasKey("Key")) {
 					curEnchantKey = curEnchant.getString("Key");
 				}
-				
-				for (int k = 0; k < notableEnchants.length; k++) {
-					String[] curNotableEnchant = notableEnchants[k];
+
+				for (String[] curNotableEnchant : notableEnchants) {
 					if (curNotableEnchant[0].equals(curEnchantKey)) {
-						
+
 						String curEnchantLevel = "?";
-						if (curEnchant.hasKey("Level")) { // just for sanity also
+						if (curEnchant.hasKey("Level")) {
 							curEnchantLevel = String.valueOf(curEnchant.getInteger("Level"));
 						}
-						
+
 						if (curEnchantLevel.equals("1")) {
 							curEnchantLevel = "I";
 						}
@@ -190,67 +212,25 @@ public class PlayerList
 						else if (curEnchantLevel.equals("3")) {
 							curEnchantLevel = "III";
 						}
-						
+
 						String pantsColorCode = "";
 						if (curPlayerPantsNonce == 6) {
-							pantsColorCode = "§5";
+							pantsColorCode = "Â§5";
 						}
-						else if (curPlayerPantsNonce == 9){
-							pantsColorCode = "§c";
+						else if (curPlayerPantsNonce == 9) {
+							pantsColorCode = "Â§c";
 						}
-						
-						String curUsernameStr = "§f§l" + curPlayerName;
-						
-						int curPlayerNameDrawWidth = mcInstance.fontRendererObj.getStringWidth(curUsernameStr);
-						if (curPlayerNameDrawWidth > longestNotableUsernameWidth) {
-							longestNotableUsernameWidth = curPlayerNameDrawWidth;
-						}
-						
-						String curEnchantStr = pantsColorCode + "§l" + curNotableEnchant[1] + " " + curEnchantLevel;
-						
-						int curEnchantDrawWidth = mcInstance.fontRendererObj.getStringWidth(curEnchantStr);
-						if (curEnchantDrawWidth > longestEnchantWidth) {
-							longestEnchantWidth = curEnchantDrawWidth;
-						}
-						
-						BlockPos curPlayerPos = curPlayer.getPosition();
-						int curPlayerPosX = curPlayerPos.getX();
-						int curPlayerPosY = curPlayerPos.getY();
-						int curPlayerPosZ = curPlayerPos.getZ();
-						
-						int playerDist = (int) Math.round(getDist(curPlayerPosX, curPlayerPosY, curPlayerPosZ, clientPosX, clientPosY, clientPosZ));
-						
-						String playerDistColorCode = "";
-						if (playerDist < 8) {
-							playerDistColorCode = "§4";
-						}
-						else if (playerDist < 16) {
-							playerDistColorCode = "§c";
-						}
-						else if (playerDist < 32) {
-							playerDistColorCode = "§6";
-						}
-						else if (playerDist < 64) {
-							playerDistColorCode = "§e";
-						}
-						else {
-							playerDistColorCode = "§f";
-						}
-						
-						playersList.add(new String[] {curUsernameStr, curEnchantStr, playerDistColorCode + playerDist + "m"});
-						
-						break;
+
+						ret.setEnchant( pantsColorCode + "Â§l" + curNotableEnchant[1] + " " + curEnchantLevel);
 					}
 				}
 			}
 		}
+
+		return ret;
 	}
-	
-	public boolean isInPit() {
+
+	private boolean isInPit() {
 		return true; // do smth here idk check for something idk what's best
-	}
-	
-	public double getDist(double fx, double fy, double fz, double tx, double ty, double tz) {
-		return Math.sqrt(Math.pow(tx - fx, 2) + Math.pow(ty - fy, 2) + Math.pow(tz - fz, 2));
 	}
 }
