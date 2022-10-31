@@ -8,10 +8,10 @@ import net.minecraft.client.Minecraft;
 public class Player {
 	
 	public int longestStringLength;
-	public int longestEnchantLength;
+	public int enchantLength;
 	public int distanceLength;
 	private String name;
-	private List<String> enchants = new ArrayList<String>();
+	private String enchant;
 	private boolean permed;
 	private String distance;
 	private Minecraft mc = Minecraft.getMinecraft();
@@ -19,11 +19,7 @@ public class Player {
 	public void doCalc() { //bad code
 		longestStringLength = mc.fontRendererObj.getStringWidth(name);
 		distanceLength = mc.fontRendererObj.getStringWidth(distance);
-		enchants.forEach(enchant -> longestEnchantLength += mc.fontRendererObj.getStringWidth(enchant));
-	}
-	
-	public void addEnchant(String ench) {
-		enchants.add(ench);
+		enchantLength = mc.fontRendererObj.getStringWidth(enchant);
 	}
 
 	public String getName() {
@@ -32,18 +28,21 @@ public class Player {
 	public void setName(String name) {
 		this.name = name;
 	}
-	public List<String> getEnchants() {
-		return enchants;
+
+	public String getEnchant() {
+		return enchant;
 	}
-	public void setEnchants(List<String> enchants) {
-		this.enchants = enchants;
+	public void setEnchant(String ench) {
+		this.enchant = ench;
 	}
+
 	public boolean isPermed() {
 		return permed;
 	}
 	public void setPermed(boolean permed) {
 		this.permed = permed;
 	}
+
 	public String getDistance() {
 		return distance;
 	}
@@ -52,7 +51,7 @@ public class Player {
 	}
 	
 	public boolean isNoticable() {
-		return permed || !enchants.isEmpty();
+		return permed || enchant != null;
 	}
 	
 }

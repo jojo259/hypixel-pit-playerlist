@@ -22,13 +22,12 @@ public class PermCommand extends CommandBase {
 
 	@Override
 	public void processCommand(ICommandSender sender, String[] args) {
-		if(args[0].equals("add")) {
-			for(int i = 1; i < args.length; i++) {
-				permList.add(args[i].toLowerCase());
-				mc.thePlayer.addChatMessage(new ChatComponentText("§4Permed " + args[i] + "."));
-			}
+		int doAddCommandFrom = -1; // bc i dont want to organize this into functions
+
+		if (args[0].equals("add")) {
+			doAddCommandFrom = 1;
 		}
-		else if(args[0].equals("remove")) {
+		else if (args[0].equals("remove")) {
 			for(int i = 1; i < args.length; i++) {
 				int curUsernameIndex = permList.indexOf(args[i]);
 
@@ -41,21 +40,32 @@ public class PermCommand extends CommandBase {
 				mc.thePlayer.addChatMessage(new ChatComponentText("§4Unpermed " + args[i] + "."));
 			}
 		}
-		else if(args[0].equals("list")) {
+		else if (args[0].equals("list")) {
 			for(String name : permList) {
 				mc.thePlayer.addChatMessage(new ChatComponentText(name));
 			}
 		}
+		else {
+			doAddCommandFrom = 0;
+		}
+
+		if (doAddCommandFrom != -1) {
+			for(int i = doAddCommandFrom; i < args.length; i++) {
+				permList.add(args[i].toLowerCase());
+				mc.thePlayer.addChatMessage(new ChatComponentText("§4Permed " + args[i] + "."));
+			}
+		}
+
 		Config.updateConfig();
 	}
 	@Override
 	public List<String> addTabCompletionOptions(ICommandSender sender, String[] args, BlockPos pos) {
-        return args.length == 1 ? getListOfStringsMatchingLastWord(args, new String[] {"list", "remove", "add"}) : null; //(args.length == 2 ? getListOfStringsMatchingLastWord(args, getListOfPlayerUsernames()): null);
-    }
+		return args.length == 1 ? getListOfStringsMatchingLastWord(args, new String[] {"list", "remove", "add"}) : null; //(args.length == 2 ? getListOfStringsMatchingLastWord(args, getListOfPlayerUsernames()): null);
+	}
 	
-    private String[] getListOfPlayerUsernames() {
-        return MinecraftServer.getServer().getAllUsernames();
-    }
+	private String[] getListOfPlayerUsernames() {
+		return MinecraftServer.getServer().getAllUsernames();
+	}
 
 	@Override
 	public String getCommandUsage(ICommandSender sender) {

@@ -23,7 +23,7 @@ public class Config {
 	public static void loadConfig() {
 		if(!configDir.isDirectory()) {
 			configDir.mkdir();
-        }
+		}
 		config = new File(configDir, "config.json");
 
 		if (!config.exists()) {
@@ -32,7 +32,7 @@ public class Config {
 			} catch (IOException e) {
 				throw new RuntimeException(e);
 			}
-        }
+		}
 		else {
 			JsonParser jsonParser = new JsonParser();
 			try (FileReader reader = new FileReader(config)) {
@@ -40,7 +40,7 @@ public class Config {
 				JsonArray jarr = obj.getAsJsonArray();
 				for(int i = 0; i < jarr.size(); i++) {
 					PermCommand.permList.add(jarr.get(i).getAsString());
-                }
+				}
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
