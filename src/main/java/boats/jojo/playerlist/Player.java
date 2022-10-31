@@ -9,7 +9,6 @@ public class Player {
 	
 	public int longestStringLength;
 	public int enchantLength;
-	public int distanceLength;
 	private String name;
 	private String enchant;
 	private boolean permed;
@@ -18,7 +17,6 @@ public class Player {
 	
 	public void doCalc() { //bad code
 		longestStringLength = mc.fontRendererObj.getStringWidth(name);
-		distanceLength = mc.fontRendererObj.getStringWidth(distance);
 		enchantLength = mc.fontRendererObj.getStringWidth(enchant);
 	}
 

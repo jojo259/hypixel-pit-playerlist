@@ -44,7 +44,6 @@ public class PlayerList
 
 	int longestUsernameWidth = 0;
 	int longestEnchantWidth = 0;
-	int longestDistanceWidth = 0;
 
 	// all dark enchants (besides somber) + regularity
 	String notableEnchants[][] = {
@@ -89,7 +88,7 @@ public class PlayerList
 			return;
 		}
 
-		System.out.println("longestDistanceWidth in draw is " + longestDistanceWidth);
+		distanceWidth = 12;
 
 		int yOffSet = stringEdgeOffset;
 		GlStateManager.pushMatrix();
@@ -102,7 +101,7 @@ public class PlayerList
 			mc.fontRendererObj.drawStringWithShadow(cur.getEnchant(), stringEdgeOffset + longestUsernameWidth + stringSpacingX, yOffSet, 0xFFFFFFFF);
 
 			mc.fontRendererObj.drawStringWithShadow(cur.getDistance(),                  stringEdgeOffset + longestUsernameWidth + longestEnchantWidth + stringSpacingX * 2,                        yOffSet, yOffSet);
-			mc.fontRendererObj.drawStringWithShadow(cur.isPermed() ?  "§c§lPERMED": "", stringEdgeOffset + longestUsernameWidth + longestEnchantWidth + stringSpacingX * 2 + longestDistanceWidth + stringSpacingX * 1, yOffSet, yOffSet);
+			mc.fontRendererObj.drawStringWithShadow(cur.isPermed() ?  "§c§lPERMED": "", stringEdgeOffset + longestUsernameWidth + longestEnchantWidth + stringSpacingX * 2 + distanceWidth + stringSpacingX * 1, yOffSet, yOffSet);
 			
 			yOffSet += mc.fontRendererObj.FONT_HEIGHT + 1;
 		}
@@ -112,7 +111,6 @@ public class PlayerList
 	private void checkPlayers() {
 		longestUsernameWidth = 0;
 		longestEnchantWidth = 0;
-		longestDistanceWidth = 0;
 		playersList.clear();
 
 		List<EntityPlayer> allPlayers = mc.theWorld.playerEntities;
@@ -124,7 +122,6 @@ public class PlayerList
 				cpd.doCalc();
 				longestEnchantWidth = cpd.enchantLength > longestEnchantWidth ? cpd.enchantLength : longestEnchantWidth;
 				longestUsernameWidth = cpd.longestStringLength > longestUsernameWidth ? cpd.longestStringLength : longestUsernameWidth;
-				longestDistanceWidth = cpd.distanceLength > longestDistanceWidth ? cpd.distanceLength : longestDistanceWidth;
 			}
 		}
 	}
