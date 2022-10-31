@@ -1,8 +1,5 @@
 package boats.jojo.playerlist;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import net.minecraft.client.Minecraft;
 
 public class Player {
